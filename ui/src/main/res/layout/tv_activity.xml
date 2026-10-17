@@ -19,6 +19,10 @@
             type="androidx.databinding.ObservableBoolean" />
 
         <variable
+            name="isEditing"
+            type="androidx.databinding.ObservableBoolean" />
+
+        <variable
             name="files"
             type="com.wireguard.android.databinding.ObservableKeyedArrayList&lt;String, KeyedFile&gt;" />
 
@@ -140,6 +144,33 @@
             app:iconPadding="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/edit_button"
+            style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:minWidth="0dp"
+            android:contentDescription="@string/tv_edit"
+            android:visibility="@{(tunnels.isEmpty || !filesRoot.isEmpty) ? View.GONE : View.VISIBLE}"
+            app:icon="@{isEditing ? @drawable/ic_arrow_back : @drawable/ic_action_edit}"
+            app:iconPadding="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/import_button" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/settings_button"
+            style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:minWidth="0dp"
+            android:contentDescription="@string/settings"
+            app:icon="@drawable/ic_settings"
+            app:iconPadding="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/delete_button" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/delete_button"

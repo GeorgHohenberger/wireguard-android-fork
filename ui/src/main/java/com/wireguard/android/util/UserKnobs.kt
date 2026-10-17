@@ -36,14 +36,27 @@ object UserKnobs {
         }
 
     private val DARK_THEME = booleanPreferencesKey("dark_theme")
-    val darkTheme: Flow<Boolean>
+    // null = user never chose; API >= 29 then follows system.
+    val darkTheme: Flow<Boolean?>
         get() = Application.getPreferencesDataStore().data.map {
-            it[DARK_THEME] ?: false
+            if (it.contains(DARK_THEME)) it[DARK_THEME] else null
         }
 
     suspend fun setDarkTheme(on: Boolean) {
         Application.getPreferencesDataStore().edit {
             it[DARK_THEME] = on
+        }
+    }
+
+    private val UI_STYLE = stringPreferencesKey("ui_style")
+    val uiStyle: Flow<String>
+        get() = Application.getPreferencesDataStore().data.map {
+            it[UI_STYLE] ?: "system"
+        }
+
+    suspend fun setUiStyle(style: String) {
+        Application.getPreferencesDataStore().edit {
+            it[UI_STYLE] = style
         }
     }
 

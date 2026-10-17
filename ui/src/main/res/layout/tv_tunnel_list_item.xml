@@ -19,6 +19,10 @@
             type="androidx.databinding.ObservableBoolean" />
 
         <variable
+            name="isEditing"
+            type="androidx.databinding.ObservableBoolean" />
+
+        <variable
             name="isFocused"
             type="androidx.databinding.ObservableBoolean" />
 
@@ -74,6 +78,16 @@
                 android:layout_height="wrap_content"
                 android:text="@string/tv_delete"
                 android:visibility="@{(isDeleting &amp;&amp; isFocused) ? View.VISIBLE : View.GONE}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:visibility="gone" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/tunnel_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tv_edit"
+                android:visibility="@{(isEditing &amp;&amp; isFocused) ? View.VISIBLE : View.GONE}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 tools:visibility="gone" />

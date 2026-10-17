@@ -6,14 +6,11 @@
 package com.wireguard.android.activity
 
 import android.Manifest
-import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.os.storage.StorageManager
 import android.os.storage.StorageVolume
 import android.util.Log
@@ -22,7 +19,6 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.core.view.forEach
@@ -33,7 +29,6 @@ import androidx.databinding.ObservableField
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.GridLayoutManager.SpanSizeLookup
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.wireguard.android.Application
 import com.wireguard.android.R
 import com.wireguard.android.backend.GoBackend
@@ -49,35 +44,16 @@ import com.wireguard.android.util.ErrorMessages
 import com.wireguard.android.util.QuantityFormatter
 import com.wireguard.android.util.TunnelImporter
 import com.wireguard.android.util.UserKnobs
-import com.wireguard.android.util.applicationScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.File
 
 class TvMainActivity : AppCompatActivity() {
-    private val tunnelFileImportResultLauncher = registerForActivityResult(object : ActivityResultContracts.OpenDocument() {
-        override fun createIntent(context: Context, input: Array<String>): Intent {
-            val intent = super.createIntent(context, input)
-
-            /* AndroidTV now comes with stubs that do nothing but display a Toast less helpful than
-             * what we can do, so detect this and throw an exception that we can catch later. */
-            val activitiesToResolveIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.packageManager.queryIntentActivities(intent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong()))
-            } else {
-                @Suppress("DEPRECATION")
-                context.packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
-            }
-            if (activitiesToResolveIntent.all {
-                    val name = it.activityInfo.packageName
-                    name.startsWith("com.google.android.tv.frameworkpackagestubs") || name.startsWith("com.android.tv.frameworkpackagestubs")
-                }) {
-                throw ActivityNotFoundException()
-            }
-            return intent
-        }
-    }) { data ->
+    private val tunnelFileImportResultLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { data ->
         if (data == null) return@registerForActivityResult
         lifecycleScope.launch {
             TunnelImporter.importTunnel(contentResolver, data) {
@@ -109,17 +85,17 @@ class TvMainActivity : AppCompatActivity() {
 
     private lateinit var binding: TvActivityBinding
     private val isDeleting = ObservableBoolean()
+    private val isEditing = ObservableBoolean()
     private val files = ObservableKeyedArrayList<String, KeyedFile>()
     private val filesRoot = ObservableField("")
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        if (AppCompatDelegate.getDefaultNightMode() != AppCompatDelegate.MODE_NIGHT_YES) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                applicationScope.launch {
-                    UserKnobs.setDarkTheme(true)
-                }
-            }
+        // Fork: user can force phone UI or TV UI regardless of launcher.
+        val forcedUi = runBlocking { UserKnobs.uiStyle.first() }
+        if (forcedUi == "phone") {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
         }
         super.onCreate(savedInstanceState)
         binding = TvActivityBinding.inflate(layoutInflater)
@@ -131,6 +107,7 @@ class TvMainActivity : AppCompatActivity() {
                 binding.tunnelList.requestFocus()
         }
         binding.isDeleting = isDeleting
+        binding.isEditing = isEditing
         binding.files = files
         binding.filesRoot = filesRoot
         val gridManager = binding.tunnelList.layoutManager as GridLayoutManager
@@ -155,6 +132,10 @@ class TvMainActivity : AppCompatActivity() {
                                 Toast.makeText(this@TvMainActivity, message, Toast.LENGTH_LONG).show()
                                 Log.e(TAG, message, e)
                             }
+                        } else if (isEditing.get()) {
+                            // Fork: edit a tunnel with the existing phone editor.
+                            startActivity(Intent(this@TvMainActivity, TunnelCreatorActivity::class.java).putExtra(BaseActivity.KEY_SELECTED_TUNNEL, item.name))
+                            isEditing.set(false)
                         } else {
                             if (Application.getBackend() is GoBackend) {
                                 val intent = GoBackend.VpnService.prepare(binding.root.context)
@@ -195,34 +176,27 @@ class TvMainActivity : AppCompatActivity() {
 
         binding.importButton.setOnClickListener {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                if (filesRoot.get()?.isEmpty() != false) {
-                    navigateTo(File("/"))
-                    runOnUiThread {
-                        binding.filesList.requestFocus()
-                    }
-                } else {
-                    files.clear()
-                    filesRoot.set("")
-                    runOnUiThread {
-                        binding.tunnelList.requestFocus()
-                    }
-                }
+                browseFallback()
             } else {
                 try {
                     tunnelFileImportResultLauncher.launch(arrayOf("*/*"))
                 } catch (_: Throwable) {
-                    MaterialAlertDialogBuilder(binding.root.context).setMessage(R.string.tv_no_file_picker).setCancelable(false)
-                        .setPositiveButton(android.R.string.ok) { _, _ ->
-                            try {
-                                startActivity(Intent(Intent.ACTION_VIEW).apply {
-                                    data = Uri.parse("https://play.google.com/store/apps/details?id=com.cxinventor.file.explorer")
-                                    setPackage("com.android.vending")
-                                })
-                            } catch (_: Throwable) {
-                            }
-                        }.show()
+                    // Fork: instead of dead-end toast, fall back to the built-in file browser.
+                    browseFallback()
                 }
             }
+        }
+
+        binding.editButton.setOnClickListener {
+            isEditing.set(!isEditing.get())
+            isDeleting.set(false)
+            runOnUiThread {
+                binding.tunnelList.requestFocus()
+            }
+        }
+
+        binding.settingsButton.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
 
         binding.deleteButton.setOnClickListener {
@@ -235,10 +209,11 @@ class TvMainActivity : AppCompatActivity() {
         val backPressedCallback = onBackPressedDispatcher.addCallback(this) { handleBackPressed() }
         val updateBackPressedCallback = object : Observable.OnPropertyChangedCallback() {
             override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-                backPressedCallback.isEnabled = isDeleting.get() || filesRoot.get()?.isNotEmpty() == true
+                backPressedCallback.isEnabled = isDeleting.get() || isEditing.get() || filesRoot.get()?.isNotEmpty() == true
             }
         }
         isDeleting.addOnPropertyChangedCallback(updateBackPressedCallback)
+        isEditing.addOnPropertyChangedCallback(updateBackPressedCallback)
         filesRoot.addOnPropertyChangedCallback(updateBackPressedCallback)
         backPressedCallback.isEnabled = false
 
@@ -254,6 +229,21 @@ class TvMainActivity : AppCompatActivity() {
     }
 
     private var pendingNavigation: File? = null
+
+    private fun browseFallback() {
+        if (filesRoot.get()?.isEmpty() != false) {
+            navigateTo(File("/"))
+            runOnUiThread {
+                binding.filesList.requestFocus()
+            }
+        } else {
+            files.clear()
+            filesRoot.set("")
+            runOnUiThread {
+                binding.tunnelList.requestFocus()
+            }
+        }
+    }
     private val permissionRequestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
         val to = pendingNavigation
         if (it && to != null)
@@ -288,7 +278,7 @@ class TvMainActivity : AppCompatActivity() {
     }
 
     private fun navigateTo(directory: File) {
-        require(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
+        // Fork: the built-in browser is also used on API >= 29 as picker fallback.
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             pendingNavigation = directory
@@ -342,6 +332,13 @@ class TvMainActivity : AppCompatActivity() {
         when {
             isDeleting.get() -> {
                 isDeleting.set(false)
+                runOnUiThread {
+                    binding.tunnelList.requestFocus()
+                }
+            }
+
+            isEditing.get() -> {
+                isEditing.set(false)
                 runOnUiThread {
                     binding.tunnelList.requestFocus()
                 }

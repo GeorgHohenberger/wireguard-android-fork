@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright © 2017-2025 WireGuard LLC. All Rights Reserved.
+  ~ SPDX-License-Identifier: Apache-2.0
+  -->
+<resources>
+    <string-array name="ui_style_entries">
+        <item>Automatic (launcher default)</item>
+        <item>Phone / tablet UI</item>
+        <item>TV UI</item>
+    </string-array>
+    <string-array name="ui_style_values">
+        <item>system</item>
+        <item>phone</item>
+        <item>tv</item>
+    </string-array>
+</resources>

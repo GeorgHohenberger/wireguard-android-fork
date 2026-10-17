@@ -19,6 +19,9 @@ import com.wireguard.android.R
 import com.wireguard.android.fragment.TunnelDetailFragment
 import com.wireguard.android.fragment.TunnelEditorFragment
 import com.wireguard.android.model.ObservableTunnel
+import com.wireguard.android.util.UserKnobs
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 /**
  * CRUD interface for WireGuard tunnels. This activity serves as the main entry point to the
@@ -57,6 +60,12 @@ class MainActivity : BaseActivity(), FragmentManager.OnBackStackChangedListener 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Fork: user can force phone UI or TV UI regardless of launcher.
+        if (runBlocking { UserKnobs.uiStyle.first() } == "tv") {
+            startActivity(Intent(this, TvMainActivity::class.java))
+            finish()
+            return
+        }
         setContentView(R.layout.main_activity)
         actionBar = supportActionBar
         isTwoPaneLayout = findViewById<View?>(R.id.master_detail_wrapper) != null

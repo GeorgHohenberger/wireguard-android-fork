@@ -28,6 +28,14 @@
         android:summaryOff="@string/dark_theme_summary_off"
         android:summaryOn="@string/dark_theme_summary_on"
         android:title="@string/dark_theme_title" />
+    <ListPreference
+        android:defaultValue="system"
+        android:entries="@array/ui_style_entries"
+        android:entryValues="@array/ui_style_values"
+        android:key="ui_style"
+        android:singleLineTitle="false"
+        android:summary="%s"
+        android:title="@string/ui_style_title" />
     <CheckBoxPreference
         android:defaultValue="false"
         android:key="multiple_tunnels"
