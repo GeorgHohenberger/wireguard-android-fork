@@ -18,6 +18,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
@@ -175,15 +176,27 @@ class TvMainActivity : AppCompatActivity() {
         }
 
         binding.importButton.setOnClickListener {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (filesRoot.get()?.isEmpty() == false) {
+                // Already browsing the filesystem: act as back.
                 browseFallback()
-            } else {
-                try {
-                    tunnelFileImportResultLauncher.launch(arrayOf("*/*"))
-                } catch (_: Throwable) {
-                    // Fork: instead of dead-end toast, fall back to the built-in file browser.
-                    browseFallback()
+                return@setOnClickListener
+            }
+            // Fork: like the phone UI's +, offer create-from-scratch or import from file/archive.
+            AlertDialog.Builder(this)
+                .setItems(arrayOf(getString(R.string.create_empty), getString(R.string.create_from_file))) { _, which ->
+                    if (which == 0)
+                        startActivity(Intent(this@TvMainActivity, TunnelCreatorActivity::class.java))
+                    else
+                        launchTunnelImport()
                 }
+                .show()
+        }
+
+        binding.switchUiButton.setOnClickListener {
+            lifecycleScope.launch {
+                UserKnobs.setUiStyle("phone")
+                startActivity(Intent(this@TvMainActivity, MainActivity::class.java))
+                finish()
             }
         }
 
@@ -229,6 +242,19 @@ class TvMainActivity : AppCompatActivity() {
     }
 
     private var pendingNavigation: File? = null
+
+    private fun launchTunnelImport() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            browseFallback()
+        } else {
+            try {
+                tunnelFileImportResultLauncher.launch(arrayOf("*/*"))
+            } catch (_: Throwable) {
+                // Fork: instead of dead-end toast, fall back to the built-in file browser.
+                browseFallback()
+            }
+        }
+    }
 
     private fun browseFallback() {
         if (filesRoot.get()?.isEmpty() != false) {

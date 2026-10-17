@@ -104,6 +104,10 @@
     <string name="dark_theme_title">Dunkles Farbschema verwenden</string>
     <string name="delete">Entfernen</string>
     <string name="tv_delete">Einen Tunnel zum Löschen auswählen</string>
+    <string name="ui_style_title">Oberflächenstil nach Neustart</string>
+    <string name="switch_ui">Oberfläche wechseln</string>
+    <string name="tv_edit">Einen Tunnel zum Bearbeiten auswählen</string>
+    <string name="settings_restart_needed">Wird nach App-Neustart angewendet</string>
     <string name="tv_select_a_storage_drive">Speicherlaufwerk auswählen</string>
     <string name="tv_no_file_picker">Bitte installieren Sie ein Dateiverwaltungsprogramm, um Dateien zu durchsuchen</string>
     <string name="tv_add_tunnel_get_started">Fügen Sie einen Tunnel hinzu, um loszulegen</string>

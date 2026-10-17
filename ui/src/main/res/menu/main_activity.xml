@@ -5,6 +5,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/menu_switch_ui"
+        android:alphabeticShortcut="u"
+        android:icon="@drawable/ic_ui_switch"
+        android:orderInCategory="900"
+        android:title="@string/switch_ui"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/menu_settings"
         android:alphabeticShortcut="s"
         android:icon="@drawable/ic_settings"

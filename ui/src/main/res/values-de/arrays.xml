@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright © 2017-2025 WireGuard LLC. All Rights Reserved.
+  ~ SPDX-License-Identifier: Apache-2.0
+  -->
+<resources>
+    <string-array name="ui_style_entries">
+        <item>Automatisch (Standard des Startbildschirms)</item>
+        <item>Telefon-/Tablet-Oberfläche</item>
+        <item>TV-Oberfläche</item>
+    </string-array>
+</resources>

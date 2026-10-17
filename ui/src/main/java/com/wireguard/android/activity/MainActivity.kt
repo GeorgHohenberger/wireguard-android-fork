@@ -15,12 +15,14 @@ import androidx.appcompat.app.ActionBar
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.fragment.app.commit
+import androidx.lifecycle.lifecycleScope
 import com.wireguard.android.R
 import com.wireguard.android.fragment.TunnelDetailFragment
 import com.wireguard.android.fragment.TunnelEditorFragment
 import com.wireguard.android.model.ObservableTunnel
 import com.wireguard.android.util.UserKnobs
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -97,6 +99,15 @@ class MainActivity : BaseActivity(), FragmentManager.OnBackStackChangedListener 
             }
             // This menu item is handled by the editor fragment.
             R.id.menu_action_save -> false
+            R.id.menu_switch_ui -> {
+                // Fork: remember the TV UI as the restart UI, then switch without restart.
+                lifecycleScope.launch {
+                    UserKnobs.setUiStyle("tv")
+                    startActivity(Intent(this@MainActivity, TvMainActivity::class.java))
+                    finish()
+                }
+                true
+            }
             R.id.menu_settings -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
                 true
