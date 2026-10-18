@@ -1,1 +1,2 @@
-4977569 https://github.com/GeorgHohenberger/wireguard-android-fork/releases/download/v1.0.20260315-fork3/wireguard_fork_2026-10-18_02-23-53.apk
+TODO: user must create new AFTVnews code for current URL below. Last: 4977569 -> fork2 (superseded)
+current: https://github.com/GeorgHohenberger/wireguard-android-fork/releases/download/v1.0.20260315-fork3/wireguard_fork_2026-10-18_02-23-53.apk
