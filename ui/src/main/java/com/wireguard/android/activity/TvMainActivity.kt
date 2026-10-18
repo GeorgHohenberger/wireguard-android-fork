@@ -116,6 +116,7 @@ class TvMainActivity : AppCompatActivity() {
         binding.tunnelRowConfigurationHandler = object : ObservableKeyedRecyclerViewAdapter.RowConfigurationHandler<TvTunnelListItemBinding, ObservableTunnel> {
             override fun onConfigureRow(binding: TvTunnelListItemBinding, item: ObservableTunnel, position: Int) {
                 binding.isDeleting = isDeleting
+                binding.isEditing = isEditing
                 binding.isFocused = ObservableBoolean()
                 binding.root.setOnFocusChangeListener { _, focused ->
                     binding.isFocused?.set(focused)
@@ -244,15 +245,13 @@ class TvMainActivity : AppCompatActivity() {
     private var pendingNavigation: File? = null
 
     private fun launchTunnelImport() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+        // Fork: try the SAF picker on every version (Total Commander resolves it fine even on
+        // Fire OS; only if nothing resolvable exists do we hit the stub-detector).
+        try {
+            tunnelFileImportResultLauncher.launch(arrayOf("*/*"))
+        } catch (_: Throwable) {
+            // No picker at all: fall back to the built-in file browser.
             browseFallback()
-        } else {
-            try {
-                tunnelFileImportResultLauncher.launch(arrayOf("*/*"))
-            } catch (_: Throwable) {
-                // Fork: instead of dead-end toast, fall back to the built-in file browser.
-                browseFallback()
-            }
         }
     }
 
