@@ -56,7 +56,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 class TvMainActivity : AppCompatActivity() {
-    private val tunnelFileImportResultLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { data ->
+    private val tunnelFileImportResultLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { data ->
         if (data == null) return@registerForActivityResult
         lifecycleScope.launch {
             TunnelImporter.importTunnel(contentResolver, data) {
@@ -247,10 +247,9 @@ class TvMainActivity : AppCompatActivity() {
     private var pendingNavigation: File? = null
 
     private fun launchTunnelImport() {
-        // Fork: try the SAF picker on every version (Total Commander resolves it fine even on
-        // Fire OS; only if nothing resolvable exists do we hit the stub-detector).
+        // Fork: same contract as the phone UI (GET_CONTENT) — Total Commander handles it.
         try {
-            tunnelFileImportResultLauncher.launch(arrayOf("*/*"))
+            tunnelFileImportResultLauncher.launch("*/*")
         } catch (_: Throwable) {
             // No picker at all: fall back to the built-in file browser.
             browseFallback()
