@@ -11,8 +11,10 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.storage.StorageManager
 import android.os.storage.StorageVolume
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -303,9 +305,16 @@ class TvMainActivity : AppCompatActivity() {
     }
 
     private fun navigateTo(directory: File) {
-        // Fork: the built-in browser is also used on API >= 29 as picker fallback.
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+        // Fork: on Android 10+ the raw File API needs "All files access" (granted in system settings).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !Environment.isExternalStorageManager()) {
+            try {
+                startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:$packageName")))
+            } catch (_: Throwable) {
+                startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
+            }
+            return
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             pendingNavigation = directory
             permissionRequestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
             return
