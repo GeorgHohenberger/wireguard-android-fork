@@ -184,15 +184,23 @@ class TvMainActivity : AppCompatActivity() {
                 browseFallback()
                 return@setOnClickListener
             }
-            // Fork: like the phone UI's +, offer create-from-scratch or import from file/archive.
-            AlertDialog.Builder(this)
-                .setItems(arrayOf(getString(R.string.create_empty), getString(R.string.create_from_file))) { _, which ->
-                    if (which == 0)
-                        startActivity(Intent(this@TvMainActivity, TunnelCreatorActivity::class.java))
-                    else
-                        launchTunnelImport()
-                }
-                .show()
+            // Fork: same bottom sheet as the phone UI's + (QR row auto-hidden, no camera on TV).
+            val sheet = com.google.android.material.bottomsheet.BottomSheetDialog(this)
+            val sheetView = layoutInflater.inflate(R.layout.add_tunnels_bottom_sheet, null)
+            if (packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) != true)
+                sheetView.findViewById<android.view.View>(R.id.create_from_qrcode).visibility = android.view.View.GONE
+            sheetView.findViewById<android.view.View>(R.id.create_from_file).setOnClickListener {
+                sheet.dismiss()
+                launchTunnelImport()
+            }
+            sheetView.findViewById<android.view.View>(R.id.create_empty).setOnClickListener {
+                sheet.dismiss()
+                startActivity(Intent(this@TvMainActivity, TunnelCreatorActivity::class.java))
+            }
+            sheet.setContentView(sheetView)
+            sheet.behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+            sheet.show()
+            sheetView.findViewById<android.view.View>(R.id.create_from_file).requestFocus()
         }
 
         binding.switchUiButton.setOnClickListener {
