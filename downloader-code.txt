@@ -1,1 +1,1 @@
-1475199 https://github.com/GeorgHohenberger/wireguard-android-fork/releases/download/v1.0.20260315-fork/wireguard_fork_2026-10-18_01-40-53.apk
+1475199 https://github.com/GeorgHohenberger/wireguard-android-fork/releases/download/v1.0.20260315-fork2/wireguard_fork_2026-10-18_02-13-35.apk
