@@ -1,2 +1,1 @@
-TODO: new AFTVnews code needed (4443100 -> superseded fork3)
-current: https://github.com/GeorgHohenberger/wireguard-android-fork/releases/download/v1.0.20260315-fork4/wireguard_fork_2026-10-18_02-31-24.apk
+9564780 https://github.com/GeorgHohenberger/wireguard-android-fork/releases/download/v1.0.20260315-fork4/wireguard_fork_2026-10-18_02-31-24.apk
